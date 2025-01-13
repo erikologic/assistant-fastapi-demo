@@ -1,7 +1,6 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI
+from app.routes.heartbeat import router as heartbeat_router
 
 app = FastAPI()
 
-@app.get("/heartbeat", status_code=status.HTTP_204_NO_CONTENT)
-async def heartbeat():
-    return None
+app.include_router(heartbeat_router)

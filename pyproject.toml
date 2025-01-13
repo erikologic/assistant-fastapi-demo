@@ -12,6 +12,12 @@ dependencies = [
     "uvicorn (>=0.34.0,<0.35.0)"
 ]
 
+[tool.poetry.dependencies]
+python = "^3.13"
+
+[tool.poetry.group.test.dependencies]
+httpx = "^0.28.1"
+pytest = "^8.3.4"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
