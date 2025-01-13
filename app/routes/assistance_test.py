@@ -1,3 +1,4 @@
+import pytest
 from app.routes.assistance import (
     Notification,
     Channel,
@@ -15,11 +16,19 @@ class InMemoryChannel(Channel):
         self.notifications.append(notification)
 
 
-def test_create_sales_assistance_notification():
-    mocked_channels = {"Sales": InMemoryChannel()}
-    app.dependency_overrides[channels] = lambda: mocked_channels
-    client = TestClient(app)
+@pytest.fixture
+def mocked_channels():
+    return {"Sales": InMemoryChannel(), "Pricing": InMemoryChannel()}
 
+
+@pytest.fixture
+def client(mocked_channels):
+    app.dependency_overrides[channels] = lambda: mocked_channels
+    yield TestClient(app)
+    app.dependency_overrides.clear()
+
+
+def test_create_sales_assistance_notification(client, mocked_channels):
     notification_data = {
         "topic": "Sales",
         "description": "I need help with my order #12345",
@@ -32,14 +41,7 @@ def test_create_sales_assistance_notification():
     ]
 
 
-def test_create_pricing_assistance_notification():
-    mocked_channels = {
-        "Sales": InMemoryChannel(),
-        "Pricing": InMemoryChannel(),
-    }
-    app.dependency_overrides[channels] = lambda: mocked_channels
-    client = TestClient(app)
-
+def test_create_pricing_assistance_notification(client, mocked_channels):
     notification_data = {
         "topic": "Pricing",
         "description": "What's the price for the product #12345?",
