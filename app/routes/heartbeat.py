@@ -1,8 +1,8 @@
 from fastapi import APIRouter, status
 
-router = APIRouter()
+router = APIRouter(prefix="/heartbeat")
 
 
-@router.get("/heartbeat", status_code=status.HTTP_204_NO_CONTENT)
+@router.get("/", status_code=status.HTTP_204_NO_CONTENT)
 async def heartbeat():
     return None

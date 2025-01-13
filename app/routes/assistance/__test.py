@@ -1,14 +1,11 @@
 import pytest
-from app.routes.assistance import (
-    Notification,
-    Channel,
-    channels,
-)
+from app.routes.assistance import channels
 from fastapi.testclient import TestClient
 from app.main import app
+from app.routes.assistance.models import Notification
 
 
-class InMemoryChannel(Channel):
+class InMemoryChannel:
     def __init__(self):
         self.notifications = []
 
