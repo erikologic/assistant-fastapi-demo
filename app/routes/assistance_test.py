@@ -1,4 +1,8 @@
-from app.routes.assistance import AssistanceRequest, Channel, get_channel_resolver
+from app.routes.assistance import (
+    Notification,
+    Channel,
+    channels,
+)
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -7,26 +11,13 @@ class InMemoryChannel(Channel):
     def __init__(self):
         self.notifications = []
 
-    def send(self, notification: AssistanceRequest):
+    def send(self, notification: Notification):
         self.notifications.append(notification)
 
 
-class InMemoryChannelResolver:
-    def __init__(self):
-        self.channels = {}
-
-    def add(self, topic: str, channel: Channel):
-        self.channels[topic] = channel
-
-    def get(self, topic: str) -> Channel:
-        return self.channels[topic]
-
-
-def test_create_assistance_notification():
-    sales = InMemoryChannel()
-    channel_resolver = InMemoryChannelResolver()
-    channel_resolver.add("Sales", sales)
-    app.dependency_overrides[get_channel_resolver] = lambda: channel_resolver
+def test_create_sales_assistance_notification():
+    mocked_channels = {"Sales": InMemoryChannel()}
+    app.dependency_overrides[channels] = lambda: mocked_channels
     client = TestClient(app)
 
     notification_data = {
@@ -36,8 +27,8 @@ def test_create_assistance_notification():
 
     response = client.post("/assistance", json=notification_data)
     assert response.status_code == 201
-    assert sales.notifications == [
-        AssistanceRequest(description="I need help with my order #12345")
+    assert mocked_channels["Sales"].notifications == [
+        Notification(description="I need help with my order #12345")
     ]
 
 

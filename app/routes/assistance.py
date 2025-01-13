@@ -5,34 +5,32 @@ from pydantic import BaseModel
 router = APIRouter()
 
 
-class AssistanceNotification(BaseModel):
+class Body(BaseModel):
     topic: str
     description: str
 
 
-class AssistanceRequest(BaseModel):
+class Notification(BaseModel):
     description: str
 
 
 class Channel(typing.Protocol):
-    def send(self, request: AssistanceRequest):
+    def send(self, request: Notification):
         raise NotImplementedError()
 
 
-class ChannelResolver(typing.Protocol):
-    def get(self, topic: str) -> Channel:
-        raise NotImplementedError()
+ChannelsLookup = typing.Dict[str, Channel]
 
 
-def get_channel_resolver() -> ChannelResolver:
-    return ChannelResolver()
+def channels() -> ChannelsLookup:
+    return {}
 
 
 @router.post("/assistance", status_code=status.HTTP_201_CREATED)
 async def create_assistance_notification(
-    notification: AssistanceNotification,
-    channel_resolver: typing.Annotated[ChannelResolver, Depends(get_channel_resolver)],
+    body: Body,
+    channels: typing.Annotated[ChannelsLookup, Depends(channels)],
 ):
-    channel = channel_resolver.get(notification.topic)
-    channel.send(AssistanceRequest(description=notification.description))
+    channel = channels.get(body.topic)
+    channel.send(Notification(description=body.description))
     return channel
