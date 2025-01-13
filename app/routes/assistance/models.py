@@ -12,7 +12,7 @@ class Notification(BaseModel):
 
 
 class Channel(typing.Protocol):
-    def send(self, request: Notification):
+    async def send(self, request: Notification):
         raise NotImplementedError()
 
 

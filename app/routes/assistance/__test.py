@@ -9,12 +9,12 @@ class InMemoryChannel:
     def __init__(self):
         self.notifications = []
 
-    def send(self, notification: Notification):
+    async def send(self, notification: Notification):
         self.notifications.append(notification)
 
 
 class FailingChannel:
-    def send(self, notification: Notification):
+    async def send(self, notification: Notification):
         raise Exception("The underlying API request failed")
 
 

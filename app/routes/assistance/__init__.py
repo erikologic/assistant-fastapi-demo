@@ -25,7 +25,7 @@ async def create_assistance_notification(
         )
 
     try:
-        channel.send(Notification(description=body.description))
+        await channel.send(Notification(description=body.description))
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
