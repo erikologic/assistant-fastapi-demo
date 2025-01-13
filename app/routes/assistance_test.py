@@ -54,4 +54,11 @@ def test_create_pricing_assistance_notification(client, mocked_channels):
     ]
 
 
-# TODO test for invalid body
+def test_create_assistance_notification_invalid_topic(client):
+    notification_data = {
+        "topic": "Invalid",
+        "description": "I need help with my order #12345",
+    }
+    response = client.post("/assistance", json=notification_data)
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid topic"}

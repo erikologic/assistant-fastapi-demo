@@ -1,5 +1,5 @@
 import typing
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -32,5 +32,11 @@ async def create_assistance_notification(
     channels: typing.Annotated[ChannelsLookup, Depends(channels)],
 ):
     channel = channels.get(body.topic)
+    if channel is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid topic",
+        )
+    
     channel.send(Notification(description=body.description))
     return channel
