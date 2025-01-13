@@ -13,9 +13,18 @@ class InMemoryChannel:
         self.notifications.append(notification)
 
 
+class FailingChannel:
+    def send(self, notification: Notification):
+        raise Exception("The underlying API request failed")
+
+
 @pytest.fixture
 def mocked_channels():
-    return {"Sales": InMemoryChannel(), "Pricing": InMemoryChannel()}
+    return {
+        "Sales": InMemoryChannel(),
+        "Pricing": InMemoryChannel(),
+        "Failing": FailingChannel(),
+    }
 
 
 @pytest.fixture
@@ -59,3 +68,13 @@ def test_create_assistance_notification_invalid_topic(client):
     response = client.post("/assistance", json=notification_data)
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid topic"}
+
+
+def test_failed_notification(client, mocked_channels):
+    notification_data = {
+        "topic": "Failing",
+        "description": "I need help so much!",
+    }
+    response = client.post("/assistance", json=notification_data)
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Failed to send the notification"}

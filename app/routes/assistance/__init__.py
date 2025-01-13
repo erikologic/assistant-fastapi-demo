@@ -24,5 +24,11 @@ async def create_assistance_notification(
             detail="Invalid topic",
         )
 
-    channel.send(Notification(description=body.description))
+    try:
+        channel.send(Notification(description=body.description))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Failed to send the notification",
+        )
     return channel
