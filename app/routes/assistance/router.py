@@ -2,8 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 
 from app.middlewares.auth import VerifyToken
-from app.routes.assistance.channels.mail import MailChannel
-from app.routes.assistance.channels.slack import SlackChannel
+from app.routes.assistance.channel_configuration import CachedChannelConfiguration
 from app.routes.assistance.models import (
     AssistanceRequest,
     ExternalError,
@@ -19,24 +18,9 @@ router = APIRouter(prefix="/assistance")
 
 auth = VerifyToken()
 
-SALES_SLACK_CHANNEL = "C088LDVP40K"
-
-channels = {
-    "Sales": SlackChannel(channel=SALES_SLACK_CHANNEL),
-    "Pricing": MailChannel(),
-}
-
-
-class SimpleChannelConfiguration:
-    def __init__(self, channels):
-        self.channels = channels
-
-    async def get(self, topic):
-        return self.channels.get(topic)
-
 
 def get_dispatcher() -> IAssistantRequestDispatcher:
-    return AssistantRequestDispatcher(SimpleChannelConfiguration(channels))
+    return AssistantRequestDispatcher(CachedChannelConfiguration())
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)

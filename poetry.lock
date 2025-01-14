@@ -159,6 +159,17 @@ test = ["anyio[trio]", "coverage[toml] (>=7)", "exceptiongroup (>=1.2.0)", "hypo
 trio = ["trio (>=0.26.1)"]
 
 [[package]]
+name = "async-cache"
+version = "1.1.1"
+description = "An asyncio Cache"
+optional = false
+python-versions = ">=3.3"
+groups = ["main"]
+files = [
+    {file = "async-cache-1.1.1.tar.gz", hash = "sha256:81aa9ccd19fb06784aaf30bd5f2043dc0a23fc3e998b93d0c2c17d1af9803393"},
+]
+
+[[package]]
 name = "attrs"
 version = "24.3.0"
 description = "Classes Without Boilerplate"
@@ -1218,4 +1229,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "28ddb0a788a96e562d6c685dfac79880aad3f349c6bc38e3030320b65a269bef"
+content-hash = "cdfe62107985eb9a6b25952a019f0a11d4f1f781d24911f64a2bdb1bd5c9814a"
