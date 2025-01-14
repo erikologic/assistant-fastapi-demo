@@ -1,7 +1,7 @@
 from slack_sdk.web.async_client import AsyncWebClient
 from slack_sdk.errors import SlackApiError
 from app.config import get_settings
-from app.routes.assistance.models import AssistanceRequest, ExternalError
+from app.routes.assistance.models import ExternalError, Notification
 
 
 class SlackChannel:
@@ -10,11 +10,11 @@ class SlackChannel:
         self.client = AsyncWebClient(token=self.config.slack_token)
         self.channel = channel
 
-    async def send(self, request: AssistanceRequest) -> None:
+    async def send(self, notification: Notification) -> None:
         try:
             await self.client.chat_postMessage(
                 channel=self.channel,
-                text=f"New assistance request: {request.description}",
+                text=f"New assistance request: {notification.description}",
             )
         except SlackApiError as e:
             # TODO improve logging

@@ -2,6 +2,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 
 from app.middlewares.auth import VerifyToken
+from app.routes.assistance.channels.mail import MailChannel
+from app.routes.assistance.channels.slack import SlackChannel
 from app.routes.assistance.models import (
     AssistanceRequest,
     ExternalError,
@@ -11,7 +13,6 @@ from app.routes.assistance.models import (
 from app.routes.assistance.service import (
     AssistantRequestDispatcher,
 )
-from app.routes.assistance.slack import SlackChannel
 
 
 router = APIRouter(prefix="/assistance")
@@ -24,7 +25,10 @@ SALES_SLACK_CHANNEL = "C088LDVP40K"
 def get_dispatcher() -> IAssistantRequestDispatcher:
     return AssistantRequestDispatcher(
         # TODO read from elsewhere
-        channels={"Sales": SlackChannel(channel=SALES_SLACK_CHANNEL)}
+        channels={
+            "Sales": SlackChannel(channel=SALES_SLACK_CHANNEL),
+            "Pricing": MailChannel(),
+        }
     )
 
 
