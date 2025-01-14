@@ -1,18 +1,17 @@
 from app.routes.assistance.models import (
     AssistanceRequest,
     ExternalError,
-    IChannel,
+    IChannelsConfiguration,
     Notification,
     RequestError,
 )
 
-
 class AssistantRequestDispatcher:
-    def __init__(self, channels: dict[str, IChannel]):
-        self.channels = channels
+    def __init__(self, channels_configuration: IChannelsConfiguration):
+        self.channels_configuration = channels_configuration
 
     async def notify(self, request: AssistanceRequest):
-        channel = self.channels.get(request.topic)
+        channel = await self.channels_configuration.get(request.topic)
         if channel is None:
             raise RequestError("Invalid topic")
 

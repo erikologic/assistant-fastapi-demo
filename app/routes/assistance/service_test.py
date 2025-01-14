@@ -16,7 +16,9 @@ from app.routes.assistance.service import (
 async def test_create_sales_assistance_notification():
     # arrange
     sales_channel = AsyncMock()
-    dispatcher = AssistantRequestDispatcher(channels={"Sales": sales_channel})
+    channels_configuration = AsyncMock()
+    channels_configuration.get.side_effect = [sales_channel]
+    dispatcher = AssistantRequestDispatcher(channels_configuration)
 
     # act
     request = AssistanceRequest(
@@ -29,29 +31,6 @@ async def test_create_sales_assistance_notification():
     sales_channel.send.assert_called_once_with(
         Notification(description="I need help with my order #12345")
     )
-
-
-@pytest.mark.asyncio
-async def test_can_route_notifications():
-    # arrange
-    channels = {
-        "Sales": AsyncMock(),
-        "Pricing": AsyncMock(),
-    }
-    dispatcher = AssistantRequestDispatcher(channels=channels)
-
-    # act
-    request = AssistanceRequest(
-        topic="Pricing",
-        description="I need help with my order #12345",
-    )
-    await dispatcher.notify(request)
-
-    # assert
-    channels["Pricing"].send.assert_called_once_with(
-        Notification(description="I need help with my order #12345")
-    )
-    channels["Sales"].send.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -73,6 +52,35 @@ async def test_create_assistance_notification_invalid_topic():
 
 
 @pytest.mark.asyncio
+async def test_can_route_notifications():
+    # arrange
+    channels = {
+        "Sales": AsyncMock(),
+        "Pricing": AsyncMock(),
+    }
+
+    class MockedChannelsConfiguration:
+        """ A quick implementation of IChannelsConfiguration """
+        async def get(self, topic):
+            return channels.get(topic)
+
+    dispatcher = AssistantRequestDispatcher(MockedChannelsConfiguration())
+
+    # act
+    request = AssistanceRequest(
+        topic="Pricing",
+        description="I need help with my order #12345",
+    )
+    await dispatcher.notify(request)
+
+    # assert
+    channels["Pricing"].send.assert_called_once_with(
+        Notification(description="I need help with my order #12345")
+    )
+    channels["Sales"].send.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_failing_channel():
     # arrange
     failing_channel = AsyncMock()
@@ -90,3 +98,39 @@ async def test_failing_channel():
         await dispatcher.notify(request)
 
     assert str(exc_info.value) == "Failed to send the notification"
+
+
+@pytest.mark.asyncio
+async def test_updating_channel_conf():
+    
+    # GIVEN an initial configuration pointing to a channel
+    sales_channel = AsyncMock()
+    channels_configuration = AsyncMock()
+    channels_configuration.get.side_effect = [sales_channel]
+    dispatcher = AssistantRequestDispatcher(channels_configuration)
+
+    # WHEN we hit the service for a sales request
+    sales_request = AssistanceRequest(
+        topic="Sales",
+        description="I need help with my order #12345",
+    )
+    await dispatcher.notify(sales_request)
+
+    # THEN we will send the notification to the channel
+    sales_channel.send.assert_called_once_with(
+        Notification(description="I need help with my order #12345")
+    )
+    sales_channel.reset_mock()
+
+    # GIVEN the channel configuration is updated
+    new_sales_channel = AsyncMock()
+    channels_configuration.get.side_effect = [new_sales_channel]
+
+    # WHEN we hit the service for a sales request again
+    await dispatcher.notify(sales_request)
+
+    # THEN we will send the notification to the new channel
+    sales_channel.send.assert_not_called()
+    new_sales_channel.send.assert_called_once_with(
+        Notification(description="I need help with my order #12345")
+    )

@@ -27,3 +27,8 @@ class IAssistantRequestDispatcher(Protocol):
 class IChannel(Protocol):
     async def send(self, notification: Notification) -> None:
         raise NotImplementedError()
+
+
+class IChannelsConfiguration(Protocol):
+    async def get(self, topic: str) -> IChannel | None:
+        raise NotImplementedError()

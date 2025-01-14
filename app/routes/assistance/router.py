@@ -21,15 +21,22 @@ auth = VerifyToken()
 
 SALES_SLACK_CHANNEL = "C088LDVP40K"
 
+channels = {
+    "Sales": SlackChannel(channel=SALES_SLACK_CHANNEL),
+    "Pricing": MailChannel(),
+}
+
+
+class SimpleChannelConfiguration:
+    def __init__(self, channels):
+        self.channels = channels
+
+    async def get(self, topic):
+        return self.channels.get(topic)
+
 
 def get_dispatcher() -> IAssistantRequestDispatcher:
-    return AssistantRequestDispatcher(
-        # TODO read from elsewhere
-        channels={
-            "Sales": SlackChannel(channel=SALES_SLACK_CHANNEL),
-            "Pricing": MailChannel(),
-        }
-    )
+    return AssistantRequestDispatcher(SimpleChannelConfiguration(channels))
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
