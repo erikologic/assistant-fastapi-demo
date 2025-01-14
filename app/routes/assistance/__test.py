@@ -1,80 +1,69 @@
-import pytest
-from app.routes.assistance import channels
 from fastapi.testclient import TestClient
 from app.main import app
-from app.routes.assistance.models import Notification
+from app.routes.assistance import get_dispatcher
+from app.routes.assistance.service import AssistanceRequest, ExternalError, RequestError
 
+ENDPOINT="/assistance"
 
-class InMemoryChannel:
-    def __init__(self):
-        self.notifications = []
+REQUEST = {
+    "topic": "Sales",
+    "description": "I need help with my order #12345",
+}
 
-    async def send(self, notification: Notification):
-        self.notifications.append(notification)
+def test_success():
+    # arrange
+    class MockedDispatcher:
+        def __init__(self):
+            self.request = None
 
+        async def notify(self, request):
+            self.request = request
 
-class FailingChannel:
-    async def send(self, notification: Notification):
-        raise Exception("The underlying API request failed")
+    mocked_dispatcher = MockedDispatcher()
+    app.dependency_overrides[get_dispatcher] = lambda: mocked_dispatcher
+    client = TestClient(app)
 
-
-@pytest.fixture
-def mocked_channels():
-    return {
-        "Sales": InMemoryChannel(),
-        "Pricing": InMemoryChannel(),
-        "Failing": FailingChannel(),
-    }
-
-
-@pytest.fixture
-def client(mocked_channels):
-    app.dependency_overrides[channels] = lambda: mocked_channels
-    yield TestClient(app)
-    app.dependency_overrides.clear()
-
-
-def test_create_sales_assistance_notification(client, mocked_channels):
-    notification_data = {
-        "topic": "Sales",
-        "description": "I need help with my order #12345",
-    }
-
-    response = client.post("/assistance", json=notification_data)
+    # act
+    response = client.post(ENDPOINT, json=REQUEST)
+    
+    # assert
     assert response.status_code == 201
-    assert mocked_channels["Sales"].notifications == [
-        Notification(description="I need help with my order #12345")
-    ]
+    assert mocked_dispatcher.request == AssistanceRequest(
+        topic="Sales", description="I need help with my order #12345"
+    )
 
 
-def test_create_pricing_assistance_notification(client, mocked_channels):
-    notification_data = {
-        "topic": "Pricing",
-        "description": "What's the price for the product #12345?",
-    }
+def test_invalid_topic():
+    # arrange
+    class MockedDispatcher:
+        async def notify(self, request):
+            raise RequestError("Invalid topic")
 
-    response = client.post("/assistance", json=notification_data)
-    assert response.status_code == 201
-    assert mocked_channels["Pricing"].notifications == [
-        Notification(description="What's the price for the product #12345?")
-    ]
+    mocked_dispatcher = MockedDispatcher()
+    app.dependency_overrides[get_dispatcher] = lambda: mocked_dispatcher
+    client = TestClient(app)
+    
+    # act
+    response = client.post(ENDPOINT, json=REQUEST)
 
-
-def test_create_assistance_notification_invalid_topic(client):
-    notification_data = {
-        "topic": "Invalid",
-        "description": "I need help with my order #12345",
-    }
-    response = client.post("/assistance", json=notification_data)
+    # assert
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid topic"}
 
 
-def test_failed_notification(client, mocked_channels):
-    notification_data = {
-        "topic": "Failing",
-        "description": "I need help so much!",
-    }
-    response = client.post("/assistance", json=notification_data)
+def test_external_error():
+    # arrange
+    class MockedDispatcher:
+        async def notify(self, request):
+            raise ExternalError("Failed to send the notification")
+
+    mocked_dispatcher = MockedDispatcher()
+    app.dependency_overrides[get_dispatcher] = lambda: mocked_dispatcher
+    client = TestClient(app)
+    
+    # act
+    response = client.post(ENDPOINT, json=REQUEST)
+    
+    # assert
     assert response.status_code == 503
     assert response.json() == {"detail": "Failed to send the notification"}

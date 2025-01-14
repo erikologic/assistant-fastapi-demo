@@ -1,3 +1,4 @@
+from typing import Protocol
 from pydantic import BaseModel
 
 
@@ -15,6 +16,10 @@ class ExternalError(Exception):
 class RequestError(Exception):
     pass
 
+class IAssistantRequestDispatcher(Protocol):
+    async def notify(self, request: AssistanceRequest):
+        raise NotImplementedError()
+    
 class AssistantRequestDispatcher:
     def __init__(self, channels):
         self.channels = channels

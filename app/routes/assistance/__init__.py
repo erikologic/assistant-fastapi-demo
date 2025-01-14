@@ -1,34 +1,30 @@
-import typing
+from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.routes.assistance.models import Body
-from app.routes.assistance.models import Notification
-from app.routes.assistance.models import ChannelsLookup
+from app.routes.assistance.service import (
+    AssistanceRequest,
+    AssistantRequestDispatcher,
+    ExternalError,
+    IAssistantRequestDispatcher,
+    RequestError,
+)
+
 
 router = APIRouter(prefix="/assistance")
 
 
-def channels() -> ChannelsLookup:
-    return {}
+def get_dispatcher() -> IAssistantRequestDispatcher:
+    return AssistantRequestDispatcher(channels={})
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_assistance_notification(
-    body: Body,
-    channels: typing.Annotated[ChannelsLookup, Depends(channels)],
+    request: AssistanceRequest,
+    dispatcher: Annotated[IAssistantRequestDispatcher, Depends(get_dispatcher)],
 ):
-    channel = channels.get(body.topic)
-    if channel is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid topic",
-        )
-
     try:
-        await channel.send(Notification(description=body.description))
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Failed to send the notification",
-        )
-    return channel
+        await dispatcher.notify(request)
+    except RequestError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except ExternalError as e:
+        raise HTTPException(status_code=503, detail=str(e))
