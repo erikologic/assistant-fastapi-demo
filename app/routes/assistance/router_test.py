@@ -14,6 +14,9 @@ REQUEST = {
 
 
 def test_unscoped_requests_will_fail(patch_token_scope):
+    """
+    This test simulate a request without the required scope getting a 403 response.
+    """
     # arrange
     patch_token_scope()
 
@@ -29,6 +32,9 @@ def test_unscoped_requests_will_fail(patch_token_scope):
 
 
 def test_success(patch_token_scope, mocker):
+    """
+    This test simulate a successful request.
+    """
     # arrange
     patch_token_scope("request-assistance")
     mocked_dispatcher = AsyncMock()
@@ -48,6 +54,9 @@ def test_success(patch_token_scope, mocker):
 
 
 def test_invalid_topic(patch_token_scope, mocker):
+    """
+    This test simulate a request with an invalid topic requested getting a 400 response and an error message.
+    """
     # arrange
     patch_token_scope("request-assistance")
     mocked_dispatcher = AsyncMock()
@@ -66,10 +75,16 @@ def test_invalid_topic(patch_token_scope, mocker):
 
 
 def test_external_error(patch_token_scope):
+    """
+    This test simulate a request that fails because of the underlying service
+    returning an error and a 503 status.
+    """
     # arrange
     patch_token_scope("request-assistance")
     mocked_dispatcher = AsyncMock()
-    mocked_dispatcher.notify.side_effect = ExternalError("Failed to send the notification")
+    mocked_dispatcher.notify.side_effect = ExternalError(
+        "Failed to send the notification"
+    )
     app.dependency_overrides[get_dispatcher] = lambda: mocked_dispatcher
     client = TestClient(app)
 

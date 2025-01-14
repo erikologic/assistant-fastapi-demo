@@ -23,11 +23,16 @@ async def mocked_fetch_conf_service():
 
 class CachedChannelConfiguration:
     """
-    A simple example on how to to create a class which will 
-    fetch a configuration and cache it for a certain amount of time.
+    A simple example on how to to create a class which will pull a configuration
+    and cache it for a certain amount of time.
+    Ideally, the fetching operation would be non-blocking e.g. using something
+    like stale while revalidated (SWR) or a similar approach.
 
-    Ideally, the fetching operation would be non-blocking e.g. using
-    something like stale while revalidated (SWR) or a similar approach.
+    This class is not tested for sake of time, it would probably benefit from some
+    testing. I spiked it just to showcase the concept.
+    This could be unrequired, or there could be other ways to achieve the same
+    result, e.g. push-based, by having a webhook to notify when the configuration
+    changes, or by having a POST endpoint receiving the configuration.
     """
     async def get(self, topic):
         channels = await self._fetch_conf()

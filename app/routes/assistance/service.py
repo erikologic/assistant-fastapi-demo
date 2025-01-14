@@ -7,6 +7,10 @@ from app.routes.assistance.models import (
 )
 
 class AssistantRequestDispatcher:
+    """
+    This class is the internal Interactor that will handle the notification request.
+    It will get from ChannelConfiguration the channel to send the notification to it.
+    """
     def __init__(self, channels_configuration: IChannelsConfiguration):
         self.channels_configuration = channels_configuration
 

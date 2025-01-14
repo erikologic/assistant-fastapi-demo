@@ -5,6 +5,11 @@ from app.routes.assistance.models import ExternalError, Notification
 
 
 class SlackChannel:
+    """
+    This class can send a notification to a Slack channel.
+    It requires inviting the bot to the channel before it can send messages.
+    """
+
     def __init__(self, channel: str):
         self.config = get_settings()
         self.client = AsyncWebClient(token=self.config.slack_token)

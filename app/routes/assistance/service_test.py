@@ -14,6 +14,9 @@ from app.routes.assistance.service import (
 
 @pytest.mark.asyncio
 async def test_create_sales_assistance_notification():
+    """
+    This test will create a notification for the Sales channel.
+    """
     # arrange
     sales_channel = AsyncMock()
     channels_configuration = AsyncMock()
@@ -35,6 +38,9 @@ async def test_create_sales_assistance_notification():
 
 @pytest.mark.asyncio
 async def test_create_assistance_notification_invalid_topic():
+    """
+    This test will simulate a request with an invalid topic requested getting a 400 response and an error message.
+    """
     # arrange
     dispatcher = AssistantRequestDispatcher(channels={})
 
@@ -53,6 +59,9 @@ async def test_create_assistance_notification_invalid_topic():
 
 @pytest.mark.asyncio
 async def test_can_route_notifications():
+    """
+    This test showcase how to create a simple routing mechanism for notifications.
+    """
     # arrange
     channels = {
         "Sales": AsyncMock(),
@@ -82,6 +91,9 @@ async def test_can_route_notifications():
 
 @pytest.mark.asyncio
 async def test_failing_channel():
+    """
+    This test simulate a request that fails because of the underlying service.
+    """
     # arrange
     failing_channel = AsyncMock()
     failing_channel.send.side_effect = Exception("The underlying API request failed")
@@ -102,7 +114,9 @@ async def test_failing_channel():
 
 @pytest.mark.asyncio
 async def test_updating_channel_conf():
-    
+    """
+    This test showcase different channels being hit when configuration changes
+    """
     # GIVEN an initial configuration pointing to a channel
     sales_channel = AsyncMock()
     channels_configuration = AsyncMock()
