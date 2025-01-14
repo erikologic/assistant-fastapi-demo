@@ -1,3 +1,4 @@
+from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 from app.main import app
 from app.routes.assistance.router import get_dispatcher
@@ -27,18 +28,10 @@ def test_unscoped_requests_will_fail(patch_token_scope):
     assert response.status_code == 403
 
 
-def test_success(patch_token_scope):
+def test_success(patch_token_scope, mocker):
     # arrange
     patch_token_scope("request-assistance")
-
-    class MockedDispatcher:
-        def __init__(self):
-            self.request = None
-
-        async def notify(self, request):
-            self.request = request
-
-    mocked_dispatcher = MockedDispatcher()
+    mocked_dispatcher = AsyncMock()
     app.dependency_overrides[get_dispatcher] = lambda: mocked_dispatcher
     client = TestClient(app)
 
@@ -49,20 +42,16 @@ def test_success(patch_token_scope):
 
     # assert
     assert response.status_code == 201
-    assert mocked_dispatcher.request == AssistanceRequest(
-        topic="Sales", description="I need help with my order #12345"
+    mocked_dispatcher.notify.assert_called_once_with(
+        AssistanceRequest(topic="Sales", description="I need help with my order #12345")
     )
 
 
-def test_invalid_topic(patch_token_scope):
+def test_invalid_topic(patch_token_scope, mocker):
     # arrange
     patch_token_scope("request-assistance")
-
-    class MockedDispatcher:
-        async def notify(self, request):
-            raise RequestError("Invalid topic")
-
-    mocked_dispatcher = MockedDispatcher()
+    mocked_dispatcher = AsyncMock()
+    mocked_dispatcher.notify.side_effect = RequestError("Invalid topic")
     app.dependency_overrides[get_dispatcher] = lambda: mocked_dispatcher
     client = TestClient(app)
 
@@ -79,12 +68,8 @@ def test_invalid_topic(patch_token_scope):
 def test_external_error(patch_token_scope):
     # arrange
     patch_token_scope("request-assistance")
-
-    class MockedDispatcher:
-        async def notify(self, request):
-            raise ExternalError("Failed to send the notification")
-
-    mocked_dispatcher = MockedDispatcher()
+    mocked_dispatcher = AsyncMock()
+    mocked_dispatcher.notify.side_effect = ExternalError("Failed to send the notification")
     app.dependency_overrides[get_dispatcher] = lambda: mocked_dispatcher
     client = TestClient(app)
 

@@ -1,3 +1,4 @@
+from unittest.mock import AsyncMock
 import pytest
 
 from app.routes.assistance.models import (
@@ -11,23 +12,10 @@ from app.routes.assistance.service import (
 )
 
 
-class InMemoryChannel:
-    def __init__(self):
-        self.notifications = []
-
-    async def send(self, notification: Notification):
-        self.notifications.append(notification)
-
-
-class FailingChannel:
-    async def send(self, notification: Notification):
-        raise Exception("The underlying API request failed")
-
-
 @pytest.mark.asyncio
 async def test_create_sales_assistance_notification():
     # arrange
-    sales_channel = InMemoryChannel()
+    sales_channel = AsyncMock()
     dispatcher = AssistantRequestDispatcher(channels={"Sales": sales_channel})
 
     # act
@@ -38,17 +26,17 @@ async def test_create_sales_assistance_notification():
     await dispatcher.notify(request)
 
     # assert
-    assert sales_channel.notifications == [
+    sales_channel.send.assert_called_once_with(
         Notification(description="I need help with my order #12345")
-    ]
+    )
 
 
 @pytest.mark.asyncio
 async def test_can_route_notifications():
     # arrange
     channels = {
-        "Sales": InMemoryChannel(),
-        "Pricing": InMemoryChannel(),
+        "Sales": AsyncMock(),
+        "Pricing": AsyncMock(),
     }
     dispatcher = AssistantRequestDispatcher(channels=channels)
 
@@ -60,9 +48,10 @@ async def test_can_route_notifications():
     await dispatcher.notify(request)
 
     # assert
-    assert channels["Pricing"].notifications == [
+    channels["Pricing"].send.assert_called_once_with(
         Notification(description="I need help with my order #12345")
-    ]
+    )
+    channels["Sales"].send.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -86,7 +75,8 @@ async def test_create_assistance_notification_invalid_topic():
 @pytest.mark.asyncio
 async def test_failing_channel():
     # arrange
-    failing_channel = FailingChannel()
+    failing_channel = AsyncMock()
+    failing_channel.send.side_effect = Exception("The underlying API request failed")
     dispatcher = AssistantRequestDispatcher(channels={"Failing": failing_channel})
 
     # act

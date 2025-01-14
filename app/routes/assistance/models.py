@@ -20,5 +20,10 @@ class RequestError(Exception):
 
 
 class IAssistantRequestDispatcher(Protocol):
-    async def notify(self, request: AssistanceRequest):
+    async def notify(self, request: AssistanceRequest) -> None:
+        raise NotImplementedError()
+
+
+class IChannel(Protocol):
+    async def send(self, notification: Notification) -> None:
         raise NotImplementedError()

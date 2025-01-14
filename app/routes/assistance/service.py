@@ -1,13 +1,14 @@
 from app.routes.assistance.models import (
     AssistanceRequest,
     ExternalError,
+    IChannel,
     Notification,
     RequestError,
 )
 
 
 class AssistantRequestDispatcher:
-    def __init__(self, channels):
+    def __init__(self, channels: dict[str, IChannel]):
         self.channels = channels
 
     async def notify(self, request: AssistanceRequest):
