@@ -11,15 +11,21 @@ from app.routes.assistance.models import (
 from app.routes.assistance.service import (
     AssistantRequestDispatcher,
 )
+from app.routes.assistance.slack import SlackChannel
 
 
 router = APIRouter(prefix="/assistance")
 
 auth = VerifyToken()
 
+SALES_SLACK_CHANNEL = "C088LDVP40K"
+
 
 def get_dispatcher() -> IAssistantRequestDispatcher:
-    return AssistantRequestDispatcher(channels={})
+    return AssistantRequestDispatcher(
+        # TODO read from elsewhere
+        channels={"Sales": SlackChannel(channel=SALES_SLACK_CHANNEL)}
+    )
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
