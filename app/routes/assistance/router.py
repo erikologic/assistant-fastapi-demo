@@ -1,6 +1,7 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 
+from app.middlewares.auth import VerifyToken
 from app.routes.assistance.models import (
     AssistanceRequest,
     ExternalError,
@@ -14,6 +15,8 @@ from app.routes.assistance.service import (
 
 router = APIRouter(prefix="/assistance")
 
+auth = VerifyToken()
+
 
 def get_dispatcher() -> IAssistantRequestDispatcher:
     return AssistantRequestDispatcher(channels={})
@@ -23,6 +26,7 @@ def get_dispatcher() -> IAssistantRequestDispatcher:
 async def create_assistance_notification(
     request: AssistanceRequest,
     dispatcher: Annotated[IAssistantRequestDispatcher, Depends(get_dispatcher)],
+    auth_result=Security(auth.verify, scopes=["request-assistance"]),
 ):
     try:
         await dispatcher.notify(request)

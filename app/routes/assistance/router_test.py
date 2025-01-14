@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 from app.main import app
-from app.routes.assistance import get_dispatcher
+from app.routes.assistance.router import get_dispatcher
 from app.routes.assistance.models import AssistanceRequest, ExternalError
 from app.routes.assistance.models import RequestError
 
@@ -12,8 +12,25 @@ REQUEST = {
 }
 
 
-def test_success():
+def test_unscoped_requests_will_fail(patch_token_scope):
     # arrange
+    patch_token_scope()
+
+    client = TestClient(app)
+
+    # act
+    response = client.post(
+        ENDPOINT, json=REQUEST, headers={"Authorization": "Bearer test-token"}
+    )
+
+    # assert
+    assert response.status_code == 403
+
+
+def test_success(patch_token_scope):
+    # arrange
+    patch_token_scope("request-assistance")
+
     class MockedDispatcher:
         def __init__(self):
             self.request = None
@@ -26,7 +43,9 @@ def test_success():
     client = TestClient(app)
 
     # act
-    response = client.post(ENDPOINT, json=REQUEST)
+    response = client.post(
+        ENDPOINT, json=REQUEST, headers={"Authorization": "Bearer test-token"}
+    )
 
     # assert
     assert response.status_code == 201
@@ -35,8 +54,10 @@ def test_success():
     )
 
 
-def test_invalid_topic():
+def test_invalid_topic(patch_token_scope):
     # arrange
+    patch_token_scope("request-assistance")
+
     class MockedDispatcher:
         async def notify(self, request):
             raise RequestError("Invalid topic")
@@ -46,15 +67,19 @@ def test_invalid_topic():
     client = TestClient(app)
 
     # act
-    response = client.post(ENDPOINT, json=REQUEST)
+    response = client.post(
+        ENDPOINT, json=REQUEST, headers={"Authorization": "Bearer test-token"}
+    )
 
     # assert
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid topic"}
 
 
-def test_external_error():
+def test_external_error(patch_token_scope):
     # arrange
+    patch_token_scope("request-assistance")
+
     class MockedDispatcher:
         async def notify(self, request):
             raise ExternalError("Failed to send the notification")
@@ -64,7 +89,9 @@ def test_external_error():
     client = TestClient(app)
 
     # act
-    response = client.post(ENDPOINT, json=REQUEST)
+    response = client.post(
+        ENDPOINT, json=REQUEST, headers={"Authorization": "Bearer test-token"}
+    )
 
     # assert
     assert response.status_code == 503

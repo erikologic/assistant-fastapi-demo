@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.routes.heartbeat import router as heartbeat_router
-from app.routes.assistance import router as assistance_router
+from app.routes.assistance.router import router as assistance_router
 
 app = FastAPI()
 
