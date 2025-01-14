@@ -1,11 +1,13 @@
 import pytest
 
-from app.routes.assistance.service import (
+from app.routes.assistance.models import (
     AssistanceRequest,
-    AssistantRequestDispatcher,
     ExternalError,
     Notification,
     RequestError,
+)
+from app.routes.assistance.service import (
+    AssistantRequestDispatcher,
 )
 
 
@@ -16,9 +18,11 @@ class InMemoryChannel:
     async def send(self, notification: Notification):
         self.notifications.append(notification)
 
+
 class FailingChannel:
     async def send(self, notification: Notification):
         raise Exception("The underlying API request failed")
+
 
 @pytest.mark.asyncio
 async def test_create_sales_assistance_notification():
@@ -78,7 +82,7 @@ async def test_create_assistance_notification_invalid_topic():
 
     assert str(exc_info.value) == "Invalid topic"
 
-    
+
 @pytest.mark.asyncio
 async def test_failing_channel():
     # arrange

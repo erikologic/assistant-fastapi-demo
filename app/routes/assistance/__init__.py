@@ -1,12 +1,14 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.routes.assistance.service import (
+from app.routes.assistance.models import (
     AssistanceRequest,
-    AssistantRequestDispatcher,
     ExternalError,
     IAssistantRequestDispatcher,
     RequestError,
+)
+from app.routes.assistance.service import (
+    AssistantRequestDispatcher,
 )
 
 

@@ -1,19 +1,24 @@
-import typing
+from typing import Protocol
 from pydantic import BaseModel
-
-
-class Body(BaseModel):
-    topic: str
-    description: str
 
 
 class Notification(BaseModel):
     description: str
 
 
-class Channel(typing.Protocol):
-    async def send(self, request: Notification):
+class AssistanceRequest(BaseModel):
+    topic: str
+    description: str
+
+
+class ExternalError(Exception):
+    pass
+
+
+class RequestError(Exception):
+    pass
+
+
+class IAssistantRequestDispatcher(Protocol):
+    async def notify(self, request: AssistanceRequest):
         raise NotImplementedError()
-
-
-ChannelsLookup = typing.Dict[str, Channel]
