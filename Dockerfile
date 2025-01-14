@@ -12,5 +12,6 @@ COPY app /opt/service/app/
 RUN poetry install --no-root
 
 ENV LOG_JSON_FORMAT=true
+ENV ENABLE_OTEL=true
 
 CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-config",  "uvicorn_disable_logging.json"] 
