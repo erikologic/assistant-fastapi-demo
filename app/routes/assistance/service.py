@@ -9,6 +9,11 @@ class AssistanceRequest(BaseModel):
     topic: str
     description: str
 
+class ExternalError(Exception):
+    pass
+
+class RequestError(Exception):
+    pass
 
 class AssistantRequestDispatcher:
     def __init__(self, channels):
@@ -17,6 +22,9 @@ class AssistantRequestDispatcher:
     async def notify(self, request: AssistanceRequest):
         channel = self.channels.get(request.topic)
         if channel is None:
-            raise ValueError("Invalid topic")
+            raise RequestError("Invalid topic")
 
-        await channel.send(Notification(description=request.description))
+        try:
+            await channel.send(Notification(description=request.description))
+        except Exception:
+            raise ExternalError("Failed to send the notification")
