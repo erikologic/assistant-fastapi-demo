@@ -42,7 +42,9 @@ async def test_create_assistance_notification_invalid_topic():
     This test will simulate a request with an invalid topic requested getting a 400 response and an error message.
     """
     # arrange
-    dispatcher = AssistantRequestDispatcher(channels={})
+    channels_configuration = AsyncMock()
+    channels_configuration.get.side_effect = [None]
+    dispatcher = AssistantRequestDispatcher(channels_configuration)
 
     # act
     request = AssistanceRequest(
@@ -97,7 +99,9 @@ async def test_failing_channel():
     # arrange
     failing_channel = AsyncMock()
     failing_channel.send.side_effect = Exception("The underlying API request failed")
-    dispatcher = AssistantRequestDispatcher(channels={"Failing": failing_channel})
+    channels_configuration = AsyncMock()
+    channels_configuration.get.side_effect = [failing_channel]
+    dispatcher = AssistantRequestDispatcher(channels_configuration)
 
     # act
     request = AssistanceRequest(
